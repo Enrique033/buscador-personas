@@ -1,17 +1,23 @@
+const path = require("path")
 const express = require("express")
 const mysql = require("mysql2")
 const cors = require("cors")
 
 const app = express()
-app.use(express.json())
 
 app.use(cors())
+app.use(express.json())
+
+/* servir frontend */
+app.use(express.static(path.join(__dirname, "../frontend")))
+
+/* conexión mysql */
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "buscador_personas"
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "",
+    database: process.env.DB_NAME || "buscador_personas"
 })
 
 db.connect(err => {
@@ -25,30 +31,36 @@ db.connect(err => {
 
 })
 
+/* ruta principal */
+
 app.get("/", (req,res)=>{
-    res.send("Servidor del buscador funcionando")
+res.sendFile(path.join(__dirname,"../frontend/index.html"))
 })
+
+/* búsqueda */
 
 app.get("/buscar",(req,res)=>{
 
-    const q = req.query.q
+const q = req.query.q
 
-    const sql = `
-    SELECT * FROM personas
-    WHERE nombres LIKE ?
-    `
+const sql = `
+SELECT * FROM personas
+WHERE nombres LIKE ?
+`
 
-    db.query(sql,[`%${q}%`],(err,result)=>{
+db.query(sql,[`%${q}%`],(err,result)=>{
 
-        if(err){
-            return res.json([])
-        }
+if(err){
+return res.json([])
+}
 
-        res.json(result)
-
-    })
+res.json(result)
 
 })
+
+})
+
+/* login */
 
 app.post("/login",(req,res)=>{
 
@@ -75,13 +87,9 @@ res.json({ok:true})
 
 })
 
-const PORT = process.env.PORT || 3000
+/* historial */
 
-app.listen(PORT, ()=>{
-console.log("Servidor corriendo")
-})
-
-app.post("/historial", (req,res)=>{
+app.post("/historial",(req,res)=>{
 
 const {busqueda} = req.body
 
@@ -98,4 +106,12 @@ res.send({ok:true})
 
 })
 
+})
+
+/* puerto */
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, ()=>{
+console.log("Servidor corriendo en puerto " + PORT)
 })

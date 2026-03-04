@@ -34,7 +34,7 @@ body:JSON.stringify({busqueda:q})
 
 /* búsqueda */
 
-const res = await fetch(`http://127.0.0.1:3000/buscar?q=${q}`)
+const res = await fetch(`/buscar?q=${q}`)
 const data = await res.json()
 
 let html = ""
